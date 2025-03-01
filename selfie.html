@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selfie Capture</title>
+</head>
+<body>
+    <video id="video" autoplay playsinline style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        async function takeSelfie() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            // Request camera access
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            // Wait a bit to allow the camera to turn on
+            setTimeout(() => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert to Base64
+                const selfie = canvas.toDataURL('image/png');
+
+                // Stop the camera
+                stream.getTracks().forEach(track => track.stop());
+
+                // Display the selfie
+                document.body.innerHTML = `<h2>Thank You!</h2><img src="${selfie}" width="300">`;
+
+                // (Later) Send to Server
+            }, 1000);
+        }
+
+        // Start the selfie process on page load
+        takeSelfie();
+    </script>
+</body>
+</html>
