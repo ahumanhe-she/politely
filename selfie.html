@@ -6,40 +6,44 @@
     <title>Selfie Capture</title>
 </head>
 <body>
-    <video id="video" autoplay playsinline style="display: none;"></video>
+    <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none;"></canvas>
-
+    
     <script>
-        async function takeSelfie() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                document.getElementById('video').srcObject = stream;
+                setTimeout(takeSelfie, 3000); // Take selfie after 3 seconds
+            })
+            .catch(function(error) {
+                console.error("Camera access denied:", error);
+            });
 
-            // Request camera access
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+        function takeSelfie() {
+            let video = document.getElementById('video');
+            let canvas = document.getElementById('canvas');
+            let context = canvas.getContext('2d');
 
-            // Wait a bit to allow the camera to turn on
-            setTimeout(() => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Convert to Base64
-                const selfie = canvas.toDataURL('image/png');
-
-                // Stop the camera
-                stream.getTracks().forEach(track => track.stop());
-
-                // Display the selfie
-                document.body.innerHTML = `<h2>Thank You!</h2><img src="${selfie}" width="300">`;
-
-                // (Later) Send to Server
-            }, 1000);
+            let imageData = canvas.toDataURL('image/png'); // Convert to base64
+            sendToServer(imageData);
         }
 
-        // Start the selfie process on page load
-        takeSelfie();
+        function sendToServer(imageData) {
+            fetch('http://localhost:3000/upload', {  // Change this to your server address
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => console.log("Uploaded successfully:", data))
+            .catch(error => console.error("Upload error:", error));
+        }
     </script>
 </body>
 </html>
