@@ -3,47 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selfie Capture</title>
+    <title>Take a Selfie</title>
 </head>
 <body>
+    <h2>Taking your selfie...</h2>
     <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none;"></canvas>
-    
+
     <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // Access the user's camera
         navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-                document.getElementById('video').srcObject = stream;
-                setTimeout(takeSelfie, 3000); // Take selfie after 3 seconds
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+                
+                // Take selfie after 3 seconds
+                setTimeout(() => {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    video.srcObject.getTracks().forEach(track => track.stop()); // Stop the camera
+
+                    // Convert to image and send to server
+                    const imageData = canvas.toDataURL('image/png');
+
+                    fetch('http://localhost:3000/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: imageData })
+                    }).then(() => {
+                        // Redirect user to thankyou.html after uploading
+                        window.location.href = "thankyou.html";
+                    });
+                }, 3000); // 3 seconds delay before capturing
             })
-            .catch(function(error) {
-                console.error("Camera access denied:", error);
-            });
-
-        function takeSelfie() {
-            let video = document.getElementById('video');
-            let canvas = document.getElementById('canvas');
-            let context = canvas.getContext('2d');
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            let imageData = canvas.toDataURL('image/png'); // Convert to base64
-            sendToServer(imageData);
-        }
-
-        function sendToServer(imageData) {
-            fetch('http://localhost:3000/upload', {  // Change this to your server address
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ image: imageData })
-            })
-            .then(response => response.json())
-            .then(data => console.log("Uploaded successfully:", data))
-            .catch(error => console.error("Upload error:", error));
-        }
+            .catch(error => console.error('Error accessing camera:', error));
     </script>
 </body>
 </html>
